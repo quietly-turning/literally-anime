@@ -1,10 +1,11 @@
 # literally anime
-Scripts for video + audio + subtitle playback in StepMania 5.
+scripts for video + audio + subtitle playback in StepMania 5
 
 
 ## about
 
 ![twitter thread](https://i.imgur.com/rfrMu2fl.png)
+
 ![I am her cat](https://i.imgur.com/3jVjNJXl.png)
 
 
@@ -18,7 +19,7 @@ You can't yet, not really.  This is still a work-in-progress.
   * audio file
   * subtitle file
 
-Placing those three files in `./media`, and editing [anime.ini](./anime.ini) to match.
+placing those three files in `./media`, and editing [anime.ini](./anime.ini) to match.
   
 For ffmpeg usage, see: <https://stackoverflow.com/a/32925753>
 
@@ -29,9 +30,15 @@ For ffmpeg usage, see: <https://stackoverflow.com/a/32925753>
 
 Two fields in your ssc field must be set appropriately for this to work.
 
-The `#LASTSECONDHINT` field should match the duration of the video, in seconds.  If your video is 5 minutes and 25 seconds long, use `#LASTSECONDHINT:325.000;`
+Set `#LASTSECONDHINT` to the duration of your video in seconds.  For example, if your video is 5 minutes and 25 seconds long, use 
+```
+#LASTSECONDHINT:325.000;
+```
 
-The `FGCHANGES` field should be set to `#FGCHANGES:0.000=./scripts/AnimeFGCHANGES.lua=1.000=0=0=0=StretchNoLoop====,;`
+Set `FGCHANGES` field to 
+```
+#FGCHANGES:0.000=./scripts/AnimeFGCHANGES.lua=1.000=0=0=0=StretchNoLoop====;
+```
 
 ---
 
@@ -41,7 +48,7 @@ You can provide preview audio (to be played in ScreenSelectMusic but not in Scre
 
 Specify `#MUSIC:your-song-here.ogg;` as general audio so that StepMania plays it as preview music in ScreenSelectMusic.
 
-Specify `#MUSIC:silence.ogg;` as stepchart-specific audio so that StepMania does not play any extraneous music during Gameplay.
+Then, lower in the ssc file under the head for your stepchart, specify `#MUSIC:silence.ogg;` as stepchart-specific audio so that StepMania does not play any extraneous music during Gameplay.
 
 ## example .ssc file
 
