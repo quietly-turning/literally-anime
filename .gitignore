@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# common editor config files
+.vscode/
+*.sublime-workspace
+
+# design images
+*.afphoto
+*.psd
