@@ -4,9 +4,9 @@ scripts for video + audio + subtitle playback in StepMania 5
 
 ## about
 
-![twitter thread](https://i.imgur.com/rfrMu2fl.png)
+![twitter thread](https://i.imgur.com/rfrMu2fh.png)
 
-![I am her cat](https://i.imgur.com/3jVjNJXl.png)
+![I am her cat](https://i.imgur.com/3jVjNJXh.png)
 
 
 ## how to use
@@ -48,7 +48,7 @@ You can provide preview audio (to be played in ScreenSelectMusic but not in Scre
 
 Specify `#MUSIC:your-song-here.ogg;` as general audio so that StepMania plays it as preview music in ScreenSelectMusic.
 
-Then, lower in the ssc file under the head for your stepchart, specify `#MUSIC:silence.ogg;` as stepchart-specific audio so that StepMania does not play any extraneous music during Gameplay.
+Then, lower in the ssc file with the fields for your stepchart, specify `#MUSIC:silence.ogg;` as stepchart-specific audio so that StepMania does not play any extraneous music during Gameplay.
 
 ## example .ssc file
 
