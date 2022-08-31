@@ -134,16 +134,15 @@ helpers.GetAssets = function()
 end
 
 -- ------------------------------------------------------
--- StrToSecs converts a stringifed timestamp formatted like "0:02:15.10"
--- and returns it as a numeric value of seconds
+-- StrToSecs converts a stringifed timestamp formatted like "00:02:15.100"
+-- and returns it as a numeric 135.1
 
-helpers.StrToSecs = function(s)
-    local hour, min, sec, hundreth = s:match("(%d+):(%d+):(%d+)%.(%d+)")
-    hour = hour or 0
-    min  = min  or 0
-    sec  = sec  or 0
-    hundreth = hundreth or 0
-    return ((hour*60*60)+(min*60)+(sec)+(hundreth*0.01))
+local StrToSecs = function(s)
+    local hour, min, sec, hundreth = s:gsub(",", "."):match("(%d+):(%d+):(%d+%.%d+)")
+    hour = tonumber(hour) or 0
+    min  = tonumber(min)  or 0
+    sec  = tonumber(sec)  or 0
+    return ((hour*60*60)+(min*60)+(sec))
 end
 
 -- ------------------------------------------------------
