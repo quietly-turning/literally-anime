@@ -25,8 +25,14 @@ local max_subt_width = (_screen.w-30) / font_zoom
 local subtitle_data
 
 if assets.SubtitleFile then
+   --get subtitle file extension
+   local extension = assets.SubtitleFile:match("%.(.+)$")
+
+   local path = ("%sscripts/subtitle-parsers/%s-parser.lua"):format(base_path, extension)
+   lua.ReportScriptError(("path was: %s\n\n"):format(path))
+      
    -- get parser
-   local ParseFile = dofile(base_path.."scripts/subtitle-parsers/ass-parser.lua")
+   local ParseFile = dofile(path)
    -- parse subtitle file, get data
    subtitle_data = ParseFile(assets.SubtitleFile)
 end

@@ -8,6 +8,10 @@ local helpers = {
 }
 
 -- ------------------------------------------------------
+
+local supported_subtitle_formats = { "srt", "ass "}
+
+-- ------------------------------------------------------
 -- based on global split() from _fallback/Scripts/00 init.lua
 -- hackishly modified to include a numeric "stop" value
 -- as in: stop splitting the provided `text` if you've already split `stop` number of times
@@ -16,19 +20,17 @@ helpers.split = function(delimiter, text, stop)
    local list = {}
    local pos = 1
   
-  if type(stop)~="number" then stop=9999 end
-  
    while 1 do
       local first,last = string.find(text, delimiter, pos)
       if first then
          table.insert(list, string.sub(text, pos, first-1))
          pos = last+1
-      -- if we've reach our limit of splits
-      -- insert the remaining string until its end and break
-      if #list >= stop-1 then
-           table.insert(list, string.sub(text, pos))
-           break
-      end
+         -- if we have a stop value and have reach our limit of splits
+         if stop and (#list >= stop-1) then
+            -- insert the remaining string until its end and break
+            table.insert(list, string.sub(text, pos))
+            break
+         end
       else
          table.insert(list, string.sub(text, pos))
          break
@@ -77,6 +79,12 @@ helpers.GetAssets = function()
   local audio_file_found    = audio_section_found    and FILEMAN:DoesFileExist(base_path .. anime_section.AudioFile)
   local subtitle_file_found = subtitle_section_found and FILEMAN:DoesFileExist(base_path .. anime_section.SubtitleFile)
 
+  --get subtitle file extension
+  local subtitle_extension = anime_section.SubtitleFile:match("%.(.+)$")
+  -- only .srt and .ass are supported
+  local subtitle_format_supported = subtitle_section_found and table.search(supported_subtitle_formats, subtitle_extension)
+
+
   -- if the video or audio files can't be found, let the user know and don't proceed
   -- a subtitle file is optional, but if the user specified a subtitle file that can't be found, let them know and don't proceed 
   if (not video_section_found) or (not audio_section_found) or (not video_file_found) or (not audio_file_found) or (subtitle_section_found and subtitle_file_found==false) then
@@ -95,8 +103,14 @@ helpers.GetAssets = function()
     end
 
     -- subtitle
-    if subtitle_section_found and subtitle_file_found==false then
-      error = error .. ("\nSUBTITLES\n   ✅ Found a \"SubtitleFile=\" line\n❌Could not find %s\n"):format(anime_section.SubtitleFile)
+    if subtitle_section_found and (subtitle_file_found==false or subtitle_format_supported==false) then
+      error = error .."\nSUBTITLES"
+      if subtitle_file_found==false then
+        error = error .. ("\n   ✅ Found a \"SubtitleFile=\" line\n❌Could not find %s\n"):format(anime_section.SubtitleFile)
+      end
+      if not subtitle_format_supported then
+         error =  error .. ("\n   ❌ Subtitle format %s isn't supported.\nOnly .srt and .ass subtitle files are supported.\n"):format(extension)
+      end
     end
 
     lua.ReportScriptError(error)
