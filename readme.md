@@ -8,6 +8,7 @@ scripts for video + audio + subtitle playback in StepMania 5
 
 ![I am her cat](https://i.imgur.com/3jVjNJXh.png)
 
+As Jack Houser Amusements [once quipped](http://www.iul.com/houser/rush.htm), *What more needs to be said?*
 
 ## how to use
 
@@ -38,17 +39,20 @@ Check out the *example ssc file* below. Feel free to copy/paste it into an empty
 
 Two fields in your ssc field must be set appropriately for this to work.
 
-Set `#LASTSECONDHINT` to the duration of your video in seconds.  For example, if your video is 5 minutes and 25 seconds long, use 
-```
-#LASTSECONDHINT:325.000;
-```
-
-Set `#FGCHANGES` to exactly:
+First, set `#FGCHANGES` to exactly:
 ```
 #FGCHANGES:0.000=./scripts/AnimeFGCHANGES.lua=1.000=0=0=0=StretchNoLoop====;
 ```
 
 This is needed to load the scripts that will play the video.
+
+Next, set `#LASTSECONDHINT` to the duration of your video in seconds.  For example, if your video is 5 minutes and 25 seconds long, use
+```
+#LASTSECONDHINT:325.000;
+```
+
+StepMania 5's step editor does not create a `#LASTSECONDHINT` field in new ssc files by default, so you may need to type `#LASTSECONDHINT:` into your ssc file.  See the *example ssc file* below for a complete example.
+
 
 ---
 
