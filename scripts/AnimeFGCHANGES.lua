@@ -29,7 +29,6 @@ if assets.SubtitleFile then
    local extension = assets.SubtitleFile:match("%.(.+)$")
 
    local path = ("%sscripts/subtitle-parsers/%s-parser.lua"):format(base_path, extension)
-   lua.ReportScriptError(("path was: %s\n\n"):format(path))
       
    -- get parser
    local ParseFile = dofile(path)

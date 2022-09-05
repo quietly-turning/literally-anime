@@ -151,7 +151,7 @@ end
 -- StrToSecs converts a stringifed timestamp formatted like "00:02:15.100"
 -- and returns it as a numeric 135.1
 
-local StrToSecs = function(s)
+helpers.StrToSecs = function(s)
     local hour, min, sec, hundreth = s:gsub(",", "."):match("(%d+):(%d+):(%d+%.%d+)")
     hour = tonumber(hour) or 0
     min  = tonumber(min)  or 0
