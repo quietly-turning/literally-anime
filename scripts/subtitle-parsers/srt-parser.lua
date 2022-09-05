@@ -37,6 +37,7 @@ local ParseFile = function( file_path )
 
       if line ~= "" then
          if tonumber(line) ~= nil then
+            -- advance GetLine to read the timestamp
             line = file:GetLine()
             line_num = line_num+1
 
@@ -47,13 +48,20 @@ local ParseFile = function( file_path )
 
                local start, finish = line:match("(%d+:%d+:%d+%.%d+) %-%-> (%d+:%d+:%d+%.%d+)")
 
-               local text = ""
+               -- advance GetLine to read the subtitle text
+               line = file:GetLine()
+               line_num = line_num+1
+               local text = line
 
+               -- advance GetLine to read either the 2nd line of subtitle text
+               -- or an empty line indicating we should move onto the next subtitle unit
                line = file:GetLine()
                line_num = line_num+1
 
                while line ~= "" do
-                  text = text..line
+                  text = ("%s\n%s"):format(text, line)
+
+                  -- continue advancing GetLine until we get a line that's an empty string
                   line = file:GetLine()
                   line_num = line_num+1
                end
