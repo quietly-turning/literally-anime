@@ -22,46 +22,55 @@ local ParseFile = function( file_path )
 
    local events = {}
    local line_num = 0
-   
+
    while not file:AtEOF() do
       local line = file:GetLine()
       line_num = line_num+1
-      
+
+      if line_num == 1 then
+         -- unicode "byte order mark" EFBBBF is typically (but not always!) the first three bytes of the file
+         if line:byte(1)==239 and line:byte(2)==187 and line:byte(3)==191 then
+            -- skip it if we find it
+            line = string.char(line:byte(4))
+         end
+      end
+
       if line ~= "" then
          if tonumber(line) ~= nil then
             line = file:GetLine()
             line_num = line_num+1
-            
-            -- standardize numeric localization
+
+            -- standardize begin/end timestamps to use periods
             line = line:gsub(",", ".")
-            
+
             if line:match("%d+:%d+:%d+%.%d+ %-%-> %d+:%d+:%d+%.%d+") then
-               
+
                local start, finish = line:match("(%d+:%d+:%d+%.%d+) %-%-> (%d+:%d+:%d+%.%d+)")
-               
+
                local text = ""
 
                line = file:GetLine()
                line_num = line_num+1
-               
+
                while line ~= "" do
                   text = text..line
                   line = file:GetLine()
                   line_num = line_num+1
                end
-               
-               events[#events+1] = {Start=start, End=finish, Text=text}
-               
+
+               table.insert(events, {Start=helpers.StrToSecs(start), End=helpers.StrToSecs(finish), Text=text})
+
             else
                lua.ReportScriptError( ("Error parsing %s\n   line %d: Couldn't parse start and finish time."):format(file_path, line_num) )
             end
          end
-      end  
+      end
    end
+
 
    file:Close()
    file:destroy()
-   
+
    return events
 end
 
