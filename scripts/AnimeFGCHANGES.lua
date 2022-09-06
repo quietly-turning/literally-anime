@@ -3,7 +3,7 @@
 
 local base_path = GAMESTATE:GetCurrentSong():GetSongDir()
 local helpers = dofile(base_path.."scripts/AnimeHelpers.lua")
-local assets  = helpers.GetAssets() 
+local assets  = helpers.GetAssets()
 if not assets then return Def.Actor({}) end
 
 -- ------------------------------------------------------
@@ -16,7 +16,12 @@ local subtitle_stroke_color = assets.StrokeColor or {0,0,0,1} -- black stroke ar
 -- ------------------------------------------------------
 -- these values are hardcoded for now
 
-local font_path = base_path .. "fonts/Work Sans 40px/Semibold/_work sans semibold 40px.ini"
+local font_path = {
+   normal = base_path .. "fonts/Work Sans 40px/Semibold/_work sans semibold 40px.ini",
+   italic = base_path .. "fonts/Work Sans 40px/Semibold/_work sans semibold Italic 40px.ini",
+   -- bold   = base_path .. "fonts/Work Sans 40px/Semibold/_work sans semibold Bold 40px.ini",
+}
+
 local font_size = 40
 local max_subt_width = (_screen.w-30) / font_zoom
 
@@ -29,7 +34,7 @@ if assets.SubtitleFile then
    local extension = assets.SubtitleFile:match("%.(.+)$")
 
    local path = ("%sscripts/subtitle-parsers/%s-parser.lua"):format(base_path, extension)
-      
+
    -- get parser
    local ParseFile = dofile(path)
    -- parse subtitle file, get data
@@ -41,8 +46,11 @@ end
 
 local time_at_start, time_at_pause_start
 local time_spent_paused = 0
-local subtitle_ref, audio_ref, video_ref
 local paused = false
+
+local audio_ref, video_ref
+local normal_subtitle_ref, italic_subtitle_ref, bold_subtitle_ref
+local active_subtitle_ref
 
 local inputhandler = function(event)
    if not event or not event.PlayerNumber or not event.button then
@@ -74,10 +82,10 @@ end
 -- custom Update function is used to keep track of which subtitle to show
 
 local subtitle_index = 1
-local set = false  -- when false, the subtitle_actor has an empty string as its text
+local set = false  -- when false, the subtitle actor has an empty string as its text
 
 local Update = function()
-   -- check reasons we shouldn't update, first   
+   -- check reasons we shouldn't update, first
 
    -- haven't started playing yet
    if type(time_at_start)~="number" or type(time_spent_paused)~="number" then
@@ -92,17 +100,17 @@ local Update = function()
    if not (subtitle_data[subtitle_index] and subtitle_data[subtitle_index].Start and subtitle_data[subtitle_index].End) then
       return false
    end
-   
+
    -- ------------------------
 
    local time = GetTimeSinceStart() - time_at_start - time_spent_paused
 
    if not set and time >= subtitle_data[subtitle_index].Start then
-      subtitle_ref:settext(subtitle_data[subtitle_index].Text)
+      normal_subtitle_ref:settext(subtitle_data[subtitle_index].Text)
       set = true
 
    elseif set and time >= subtitle_data[subtitle_index].End then
-      subtitle_ref:settext("")
+      normal_subtitle_ref:settext("")
       set = false
       subtitle_index = subtitle_index + 1
    end
@@ -140,9 +148,6 @@ audio_actor.InitCommand=function(self) audio_ref = self end
 -- reference: https://quietly-turning.github.io/Lua-For-SM5/LuaAPI#Actors-Sprite
 local video_actor = Def.Sprite{ Texture=assets.VideoFile}
 
--- reference: https://quietly-turning.github.io/Lua-For-SM5/LuaAPI#Actors-BitmapText
-local subtitle_actor = Def.BitmapText{ File=font_path }
-
 -- ------------------------------------------------------
 
 af.HideUICommand=function(self)
@@ -161,8 +166,8 @@ end
 af.PlayCommand=function(self)
    -- Let's do our best to start video and audio playback simultaneously!
    -- Having refs available here and calling play() directly on one, then the other,
-   -- both from within the scope of this ActorFrame's PlayCommand is probably 
-   -- more reliable than something like 
+   -- both from within the scope of this ActorFrame's PlayCommand is probably
+   -- more reliable than something like
    --    self:queuecommand("StartPlayback")
    -- where the video_actor and audio_actor  both have their own
    -- custom StartPlaybackCommand() functions like
@@ -170,8 +175,8 @@ af.PlayCommand=function(self)
    -- In general, queuecommnd's timing is unreliable when precision is important.
    video_ref:play()
    audio_ref:play()
-   
-   
+
+
    time_at_start = GetTimeSinceStart()
    self:SetUpdateFunction( Update )
 end
@@ -183,7 +188,7 @@ video_actor.InitCommand=function(self)
 
    -- don't start playing yet
    self:pause()
-   
+
    -- hide at init and set opacity to 0
    self:visible(false):diffusealpha(0)
    self:Center()
@@ -218,27 +223,46 @@ video_actor.UnhideVideoCommand=function(self)
    -- start drawing the video (drawing ≠ playing); its opacity will still be 0
    self:visible(true)
    -- tween the video's opacity up to 1
-   self:smooth(0.333):diffusealpha(1):queuecommand("FadeDone") 
+   self:smooth(0.333):diffusealpha(1):queuecommand("FadeDone")
 end
 
 -- ------------------------------------------------------
+-- https://quietly-turning.github.io/Lua-For-SM5/LuaAPI#Actors-BitmapText
 
+local subtitle_af = Def.ActorFrame({
+   InitCommand=function(self)
+      self:RunCommandsOnChildren(
+         function(child)
+            child:Center():wrapwidthpixels(max_subt_width):zoom(font_zoom)
+            child:vertalign(bottom):y(_screen.h - 24)
+            child:diffuse(subtitle_color):strokecolor(subtitle_stroke_color)
+         end
+      )
+   end,
 
+   -- "normal" font subtitle actor
+   Def.BitmapText({
+      File=font_path.normal,
+      InitCommand=function(self) normal_subtitle_ref = self end
+   }),
+
+   -- italic
+   Def.BitmapText({
+      File=font_path.italic,
+      InitCommand=function(self) italic_subtitle_ref = self end
+   }),
+
+   -- -- bold
+   -- Def.BitmapText({
+   --    File=font_path.bold,
+   --    InitCommand=function(self) bold_subtitle_ref = self end
+   -- }),
+})
 
 -- ------------------------------------------------------
-
-subtitle_actor.InitCommand=function(self)
-   subtitle_ref = self
-   self:Center():wrapwidthpixels(max_subt_width):zoom(font_zoom)
-   self:vertalign(bottom):y(_screen.h - 24)
-   self:diffuse(subtitle_color):strokecolor(subtitle_stroke_color)
-end
-
--- ------------------------------------------------------
--- add 
 
 af[#af+1] = video_actor
 af[#af+1] = audio_actor
-af[#af+1] = subtitle_actor
+af[#af+1] = subtitle_af
 
 return af
