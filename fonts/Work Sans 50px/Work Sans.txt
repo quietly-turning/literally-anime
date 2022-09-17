@@ -1,0 +1,2 @@
+page: https://fonts.google.com/specimen/Work+Sans
+license: https://fonts.google.com/specimen/Work+Sans/about

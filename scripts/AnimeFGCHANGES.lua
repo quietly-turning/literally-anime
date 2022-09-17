@@ -265,4 +265,6 @@ af[#af+1] = video_actor
 af[#af+1] = audio_actor
 af[#af+1] = subtitle_af
 
+af[#af+1] = LoadActor("AMVFont.lua")
+
 return af

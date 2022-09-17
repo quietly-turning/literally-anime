@@ -12,6 +12,20 @@ local helpers = {
 local supported_subtitle_formats = { "srt", "ass "}
 
 -- ------------------------------------------------------
+-- iterates over a numerically-indexed table (haystack) until a desired value (needle) is found
+-- if found, return the index (number) of the desired value within the table
+-- if not found, return nil
+
+helpers.FindInTable = function(needle, haystack)
+	for i = 1, #haystack do
+		if needle == haystack[i] then
+			return i
+		end
+	end
+	return nil
+end
+
+-- ------------------------------------------------------
 -- based on global split() from _fallback/Scripts/00 init.lua
 -- hackishly modified to include a numeric "stop" value
 -- as in: stop splitting the provided `text` if you've already split `stop` number of times
@@ -19,7 +33,7 @@ local supported_subtitle_formats = { "srt", "ass "}
 helpers.split = function(delimiter, text, stop)
    local list = {}
    local pos = 1
-  
+
    while 1 do
       local first,last = string.find(text, delimiter, pos)
       if first then
@@ -86,7 +100,7 @@ helpers.GetAssets = function()
 
 
   -- if the video or audio files can't be found, let the user know and don't proceed
-  -- a subtitle file is optional, but if the user specified a subtitle file that can't be found, let them know and don't proceed 
+  -- a subtitle file is optional, but if the user specified a subtitle file that can't be found, let them know and don't proceed
   if (not video_section_found) or (not audio_section_found) or (not video_file_found) or (not audio_file_found) or (subtitle_section_found and subtitle_file_found==false) then
     local error = "INI FILE\n   ✅ Found \"anime.ini\"\n   ✅ Found an [anime] section in anime.ini"
 
@@ -95,7 +109,7 @@ helpers.GetAssets = function()
     if video_section_found then
       error = error .. (video_file_found and ("\n   ✅ Found %s"):format(base_path..anime_section.VideoFile) or ("   ❌ Could not find %s\n"):format(base_path..anime_section.VideoFile))
     end
-    
+
     -- audio
     error = error .. (audio_section_found and "\n\nAUDIO\n   ✅ Found an \"AudioFile=\" line" or "   ❌ Could not find an \"AudioFile=\" line")
     if audio_section_found then
@@ -116,17 +130,17 @@ helpers.GetAssets = function()
     lua.ReportScriptError(error)
     return false
   end
-  
-  local return_data = { 
-    VideoFile=base_path..anime_section.VideoFile, 
+
+  local return_data = {
+    VideoFile=base_path..anime_section.VideoFile,
     AudioFile=base_path..anime_section.AudioFile,
   }
-  
+
   -- optionally include path for SubtitleFile
   if subtitle_section_found and subtitle_file_found then
     return_data.SubtitleFile = base_path..anime_section.SubtitleFile
   end
-  
+
   if type(ini.subtitle_style)=="table" then
     -- optionally include FontZoom as number
      if type(ini.subtitle_style.FontZoom)=="number" then
@@ -141,9 +155,9 @@ helpers.GetAssets = function()
      if type(ini.subtitle_style.StrokeColor)=="string" then
         local c = color(ini.subtitle_style.StrokeColor)
         if c ~= nil then return_data.StrokeColor = c end
-     end 
-  end 
-  
+     end
+  end
+
   return return_data
 end
 
@@ -183,12 +197,12 @@ helpers.HideUI = function()
         lua.ReportScriptError("Helpers.HideUI() failed to run because there is no Screen yet.")
         return nil
     end
-   
+
    -- don't hide the theme's UI in EditMode
    if helpers.IsEditMode() then
-      return 
+      return
    end
-   
+
    for name,layer in pairs(screen:GetChildren()) do
       if name ~= "SongForeground" then
          layer:visible(false)
