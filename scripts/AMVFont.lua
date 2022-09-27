@@ -7,6 +7,10 @@ for _,_ in pairs(font_data.regular) do num_regular = num_regular+1 end
 for _,_ in pairs(font_data.italic)  do num_italic  = num_italic+1  end
 for _,_ in pairs(font_data.bold)    do num_bold    = num_bold+1    end
 
+-- subtract 1 from each to account for " " character in each table that doesn't have a corresponding texture
+num_regular = num_regular - 1
+num_italic  = num_italic  - 1
+num_bold    = num_bold    - 1
 
 local max_subt_width = (_screen.w-30)
 
@@ -27,7 +31,7 @@ local char_tw, char_th
 local GetVerts = function(t)
    local verts = {}
    local text
-   local w, h
+   local w, h = 0, 0
    local v_coords, tex_coords
 
    local row, col
@@ -36,65 +40,78 @@ local GetVerts = function(t)
 
    for phrase in ivalues(t) do
       text = phrase.text
-      w, h = 0, 0
+
       for i=1, text:len() do
-         char = text:sub(i,i)
 
-         if font_data[phrase.style] == nil then phrase.style="regular" end
+         if char == "\n" then
+            h = h + font_data.height
+            w = 0
 
-         if char == " " then
-            char_w = 128
-
-         elseif font_data[phrase.style][char] == nil then
-            char_w = 128
-            lua.ReportScriptError("char: "..char.."\nstyle: "..phrase.style.."\n\n\n")
          else
-            char_w = font_data[phrase.style][char]
+            char = text:sub(i,i)
+
+            if font_data[phrase.style] == nil then phrase.style="regular" end
+
+            -- vertex coordiates, these are the 4 corners of this single character as it appears
+            -- in the ActorMultiVertex's internal coordinate space.  the units of the coordinates
+            -- are arbitrary, so we'll use pixels as that's convenient.
+            v_coords = {
+            --   x                  y                   z
+               { w,                 h,                  1},
+               { w+font_data.width, h,                  1},
+               { w+font_data.width, h+font_data.height, 1},
+               { w,                 h+font_data.height, 1},
+            }
+
+
+            if font_data[phrase.style][char] == nil then
+               w = w + font_data.width
+               lua.ReportScriptError("char: "..char.."\nstyle: "..phrase.style.."\n\n\n")
+            else
+               w = w + font_data[phrase.style][char]
+            end
+
+            if (char == " ") then
+               table.insert(verts, {v_coords[1], c})
+               table.insert(verts, {v_coords[2], c})
+               table.insert(verts, {v_coords[3], c})
+               table.insert(verts, {v_coords[4], c})
+            else
+
+               char_index = helpers.FindInTable(char, font_data.characters) or (#font_data.characters+1)
+               char_index = char_index - 1
+
+               if phrase.style=="italic" then
+                  char_index = char_index + num_regular
+
+               elseif phrase.style=="bold" then
+                  char_index = char_index + num_regular + num+italic
+               end
+
+               row = math.floor(char_index / 16)
+               col = (char_index % 16)
+
+               -- texture coordinates, these are the 4 corners of the specific section of the bitmap texture
+               -- we want drawn at this spot in the AMV.  texture coordinates exist between 0 and 1, so we'll
+               -- need to scale pixel values down.
+               tex_coords = {
+               --  tx                                               ty
+                  {scale( (col*char_tw),          0, texture_w, 0, 1), scale((row*char_th),           0, texture_h, 0, 1)}, -- top left
+                  {scale(((col*char_tw)+char_tw), 0, texture_w, 0, 1), scale((row*char_th),           0, texture_h, 0, 1)}, -- top right
+                  {scale(((col*char_tw)+char_tw), 0, texture_w, 0, 1), scale(((row*char_th)+char_th), 0, texture_h, 0, 1)}, -- bottom right
+                  {scale( (col*char_tw),          0, texture_w, 0, 1), scale(((row*char_th)+char_th), 0, texture_h, 0, 1)}, -- bottom left
+               }
+
+               table.insert(verts, {v_coords[1], c, tex_coords[1]})
+               table.insert(verts, {v_coords[2], c, tex_coords[2]})
+               table.insert(verts, {v_coords[3], c, tex_coords[3]})
+               table.insert(verts, {v_coords[4], c, tex_coords[4]})
+            end
          end
-
-      	-- vertex coordiates, these are the 4 corners of this single character as it appears
-         -- in the ActorMultiVertex's internal coordinate space.  the units of the coordinates
-         -- are arbitrary, so we'll use pixels as that's convenient.
-         v_coords = {
-         --   x         y                   z
-            { w,        h,                  1},
-            { w+char_w, h,                  1},
-            { w+char_w, h+font_data.height, 1},
-            { w,        h+font_data.height, 1},
-         }
-
-         w = w + char_w
-
-
-         char_index = helpers.FindInTable(char, font_data.characters) or (#font_data.characters+1)
-
-         if phrase.style=="italic" then
-            char_index = char_index + num_regular
-
-         elseif phrase.style=="bold" then
-            char_index = char_index + num_regular + num+italic
-         end
-
-         row = math.floor(char_index / 16)
-         col = (char_index % 16)
-
-      	-- texture coordinates, these are the 4 corners of the specific section of the bitmap texture
-      	-- we want drawn at this spot in the AMV.  texture coordinates exist between 0 and 1, so we'll
-         -- need to scale pixel values down.
-         tex_coords = {
-         --  tx                                               ty
-            {scale( (col*char_tw),          0, texture_w, 0, 1), scale((row*char_th),           0, texture_h, 0, 1)}, -- top left
-            {scale(((col*char_tw)+char_tw), 0, texture_w, 0, 1), scale((row*char_th),           0, texture_h, 0, 1)}, -- top right
-            {scale(((col*char_tw)+char_tw), 0, texture_w, 0, 1), scale(((row*char_th)+char_th), 0, texture_h, 0, 1)}, -- bottom right
-            {scale( (col*char_tw),          0, texture_w, 0, 1), scale(((row*char_th)+char_th), 0, texture_h, 0, 1)}, -- bottom left
-         }
-
-      	table.insert(verts, {v_coords[1], c, tex_coords[1]})
-      	table.insert(verts, {v_coords[2], c, tex_coords[2]})
-      	table.insert(verts, {v_coords[3], c, tex_coords[3]})
-      	table.insert(verts, {v_coords[4], c, tex_coords[4]})
       end
    end
+
+   return verts
 end
 
 local temp = {
@@ -104,16 +121,17 @@ local temp = {
 }
 
 local AMVFont = Def.ActorMultiVertex{
-	InitCommand=function(self)
-		self:SetDrawState({Mode="DrawMode_Quads"})
-		self:LoadTexture( font_data.texture )
-		self:SetTextureFiltering( false )
+   InitCommand=function(self)
+      self:zoom(0.5)
+      self:SetDrawState({Mode="DrawMode_Quads"})
+      self:LoadTexture( font_data.texture )
+      self:SetTextureFiltering( false )
       local texture = self:GetTexture()
       texture_w = texture:GetTextureWidth()
       texture_h = texture:GetTextureHeight()
       char_tw   = math.floor(texture_w / num_cols)
       char_th   = math.floor(texture_h / num_rows)
-	end,
+   end,
    OnCommand=function(self)
       self:playcommand("SetText", temp)
    end,
