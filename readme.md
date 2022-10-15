@@ -60,11 +60,9 @@ StepMania 5's step editor does not create a `#LASTSECONDHINT` field in new ssc f
 
 #### preview audio for ScreenSelectMusic
 
-You can provide preview audio (to be played in ScreenSelectMusic but not in ScreenGameplay) by using two `#MUSIC` tags.
+You can provide preview audio by using the `#PREVIEW` tag.  If you specify an audio file like `#PREVIEW: Theme of She and Her Cat.ogg`, it will only be played in ScreenSelectMusic (and not during gameplay which is where your video will play).
 
-Specify `#MUSIC:your-song-here.ogg;` as general audio so that StepMania plays it as preview music in ScreenSelectMusic.
-
-Then, lower in the ssc file with the fields for your stepchart, specify `#MUSIC:silence.ogg;` as stepchart-specific audio so that StepMania does not play any extraneous music during Gameplay.
+Be sure to keep `#MUSIC:silence.ogg;` set so that no extraneous audio is played during gameplay.
 
 ## example .ssc file
 
@@ -87,7 +85,8 @@ Then, lower in the ssc file with the fields for your stepchart, specify `#MUSIC:
 #DISCIMAGE:;
 #LYRICSPATH:;
 #CDTITLE:;
-#MUSIC:Theme of She and Her Cat.ogg;
+#MUSIC:silence.ogg;
+#PREVIEW:Theme of She and Her Cat.ogg;
 #OFFSET:0.000000;
 #SAMPLESTART:0.000000;
 #SAMPLELENGTH:1.000000;
@@ -117,7 +116,6 @@ Then, lower in the ssc file with the fields for your stepchart, specify `#MUSIC:
 #STEPSTYPE:dance-single;
 #DESCRIPTION:;
 #CHARTSTYLE:;
-#MUSIC:silence.ogg;
 #DIFFICULTY:Beginner;
 #METER:1;
 #RADARVALUES:0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000;
